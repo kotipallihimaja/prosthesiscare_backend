@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Simple Appointment Test</title>
+    <style>
+        body { font-family: Arial; padding: 20px; max-width: 500px; margin: 0 auto; }
+        input, select { width: 100%; padding: 10px; margin: 5px 0; }
+        button { padding: 15px; background: blue; color: white; border: none; width: 100%; cursor: pointer; font-size: 16px; }
+        .result { margin-top: 20px; padding: 15px; background: #f0f0f0; white-space: pre-wrap; }
+        .error { background: #ffcccc; color: red; }
+        .success { background: #ccffcc; color: green; }
+    </style>
+</head>
+<body>
+    <h2>Schedule Appointment - Simple Test</h2>
+    
+    <input type="number" id="user_id" placeholder="User ID" value="1">
+    
+    <select id="doctor_name">
+        <option value="Dr. Smith">Dr. Smith</option>
+        <option value="Dr. Johnson">Dr. Johnson</option>
+    </select>
+    
+    <select id="appointment_type">
+        <option value="Check-up">Check-up</option>
+        <option value="Cleaning">Cleaning</option>
+    </select>
+    
+    <input type="date" id="appointment_date">
+    <input type="time" id="appointment_time">
+    
+    <button onclick="scheduleNow()">CLICK TO SCHEDULE</button>
+    
+    <div id="result" class="result">Result will appear here...</div>
+
+    <script>
+        // Set default date
+        var d = new Date();
+        d.setDate(d.getDate() + 7);
+        document.getElementById('appointment_date').valueAsDate = d;
+        document.getElementById('appointment_time').value = "10:00";
+        
+        function scheduleNow() {
+            var resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = "Sending request...";
+            resultDiv.className = "result";
+            
+            var data = {
+                user_id: document.getElementById('user_id').value,
+                doctor_name: document.getElementById('doctor_name').value,
+                appointment_type: document.getElementById('appointment_type').value,
+                appointment_date: document.getElementById('appointment_date').value,
+                appointment_time: document.getElementById('appointment_time').value,
+                notes: "Test appointment"
+            };
+            
+            console.log("Sending data:", data);
+            
+            fetch('http://localhost/prosthesis_app/schedule_appointment.php', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(function(response) {
+                console.log("Response status:", response.status);
+                return response.text();
+            })
+            .then(function(text) {
+                console.log("Response text:", text);
+                
+                try {
+                    var json = JSON.parse(text);
+                    resultDiv.innerHTML = JSON.stringify(json, null, 2);
+                    resultDiv.className = json.success ? "result success" : "result error";
+                } catch(e) {
+                    resultDiv.innerHTML = "NOT JSON: " + text;
+                    resultDiv.className = "result error";
+                }
+            })
+            .catch(function(error) {
+                resultDiv.innerHTML = "FETCH ERROR: " + error.message;
+                resultDiv.className = "result error";
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard - Risk Assessment</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        
+        /* Normal Patient Style */
+        .dashboard-normal {
+            background-color: #d4edda;
+            border: 2px solid #28a745;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        
+        /* High Risk Patient Style (RED) */
+        .dashboard-high-risk {
+            background-color: #f8d7da;
+            border: 2px solid #dc3545;
+            padding: 20px;
+            border-radius: 10px;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(220, 53, 69, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
+        }
+        
+        .risk-badge {
+            padding: 10px 20px;
+            border-radius: 20px;
+            color: white;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+        
+        .risk-red { background-color: #dc3545; }
+        .risk-green { background-color: #28a745; }
+        .risk-gray { background-color: #6c757d; }
+        
+        .patient-info {
+            background: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        
+        .condition-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .condition-list li {
+            background: #fff3cd;
+            padding: 8px 15px;
+            margin: 5px 0;
+            border-left: 4px solid #ffc107;
+            border-radius: 3px;
+        }
+        
+        h2 { margin-top: 0; }
+        input { padding: 10px; margin: 5px; width: 200px; }
+        button { padding: 10px 20px; background: #007bff; color: white; border: none; cursor: pointer; }
+        #result { margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h2>🏠 Patient Dashboard</h2>
+    
+    <input type="number" id="user_id" placeholder="User ID" value="1">
+    <button onclick="loadDashboard()">Load Dashboard</button>
+    
+    <div id="result"></div>
+
+    <script>
+        function loadDashboard() {
+            var userId = document.getElementById('user_id').value;
+            
+            if(!userId) {
+                alert("Please enter User ID!");
+                return;
+            }
+            
+            var data = { user_id: userId };
+            
+            // First, get user info
+            fetch('http://localhost/prosthesis_app/dashboard.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(userResult => {
+                if(userResult.success) {
+                    // Then check risk status
+                    return fetch('http://localhost/prosthesis_app/check_patient_risk.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                }
+            })
+            .then(response => response.json())
+            .then(riskResult => {
+                displayDashboard(userResult, riskResult);
+            })
+            .catch(error => {
+                document.getElementById('result').innerHTML = 'Error: ' + error;
+            });
+        }
+        
+        function displayDashboard(userData, riskData) {
+            var user = userData.user;
+            var prosthesis = userData.prosthesis;
+            var risk = riskData;
+            
+            // Determine dashboard style based on risk
+            var dashboardClass = risk.has_risk ? 'dashboard-high-risk' : 'dashboard-normal';
+            var riskBadgeClass = 'risk-' + risk.risk_color;
+            
+            // Build conditions list if any
+            var conditionsHTML = '';
+            if(risk.risk_conditions && risk.risk_conditions.length > 0) {
+                conditionsHTML = '<h3>⚠️ Risk Conditions:</h3><ul class="condition-list">';
+                risk.risk_conditions.forEach(function(cond) {
+                    conditionsHTML += '<li>' + cond + '</li>';
+                });
+                conditionsHTML += '</ul>';
+            }
+            
+            var html = '<div class="' + dashboardClass + '">';
+            
+            // Risk Badge
+            html += '<span class="risk-badge ' + riskBadgeClass + '">' + risk.risk_level + '</span>';
+            
+            html += '<h2>Welcome, ' + user.name + '!</h2>';
+            
+            // Patient Info
+            html += '<div class="patient-info">';
+            html += '<p><strong>📧 Email:</strong> ' + user.email + '</p>';
+            html += '<p><strong>📱 Phone:</strong> ' + user.phone + '</p>';
+            html += '<p><strong>🎂 Age:</strong> ' + user.age + ' years</p>';
+            html += '</div>';
+            
+            // Prosthesis Info
+            if(prosthesis) {
+                html += '<div class="patient-info">';
+                html += '<h3>🦷 Your Prosthesis</h3>';
+                html += '<p><strong>Type:</strong> ' + prosthesis.prosthesis_type + '</p>';
+                html += '<p><strong>Name:</strong> ' + prosthesis.prosthesis_name + '</p>';
+                html += '<p><strong>Installed:</strong> ' + prosthesis.installation_date + '</p>';
+                html += '<p><strong>Next Maintenance:</strong> ' + prosthesis.next_maintenance_date + '</p>';
+                html += '</div>';
+            }
+            
+            // Risk Conditions
+            html += conditionsHTML;
+            
+            // Warning message for high risk
+            if(risk.has_risk) {
+                html += '<div style="background: #721c24; color: white; padding: 15px; border-radius: 5px; margin-top: 15px;">';
+                html += '<strong>⚠️ Warning:</strong> Due to your medical conditions, extra precautions may be needed for dental procedures. Please inform your dentist about all your conditions!';
+                html += '</div>';
+            }
+            
+            html += '</div>';
+            
+            document.getElementById('result').innerHTML = html;
+        }
+    </script>
+</body>
+</html>

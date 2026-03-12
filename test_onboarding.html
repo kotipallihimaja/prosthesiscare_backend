@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Onboarding</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        .section { border: 1px solid #ccc; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .question { margin: 8px 0; }
+        label { display: inline-block; width: 200px; }
+        select { padding: 8px; margin: 5px; width: 150px; }
+        input[type="date"], input[type="text"] { padding: 8px; margin: 5px; width: 200px; }
+        button { padding: 10px 20px; background: blue; color: white; margin-top: 10px; cursor: pointer; }
+        #result { margin-top: 20px; padding: 10px; background: #f0f0f0; white-space: pre-wrap; }
+        h3 { margin-top: 0; color: #333; }
+    </style>
+</head>
+<body>
+    <h2>Onboarding Test</h2>
+    
+    <input type="number" id="user_id" placeholder="User ID (e.g., 1)"><br><br>
+    
+    <!-- Comorbidities Section -->
+    <div class="section">
+        <h3>🏥 Comorbidities</h3>
+        
+        <div class="question">
+            <label>Diabetes:</label>
+            <select id="diabetes">
+                <option value="">Select</option>
+                <option value="No">No</option>
+                <option value="Yes">Yes</option>
+            </select>
+        </div>
+        
+        <div class="question">
+            <label>Hypertension:</label>
+            <select id="hypertension">
+                <option value="">Select</option>
+                <option value="No">No</option>
+                <option value="Yes">Yes</option>
+            </select>
+        </div>
+        
+        <div class="question">
+            <label>Hyperthyroidism:</label>
+            <select id="hyperthyroidism">
+                <option value="">Select</option>
+                <option value="No">No</option>
+                <option value="Yes">Yes</option>
+            </select>
+        </div>
+        
+        <div class="question">
+            <label>Hypothyroidism:</label>
+            <select id="hypothyroidism">
+                <option value="">Select</option>
+                <option value="No">No</option>
+                <option value="Yes">Yes</option>
+            </select>
+        </div>
+        
+        <div class="question">
+            <label>Heart Disease:</label>
+            <select id="heart_disease">
+                <option value="">Select</option>
+                <option value="No">No</option>
+                <option value="Yes">Yes</option>
+            </select>
+        </div>
+        
+        <div class="question">
+            <label>Blood Disorder:</label>
+            <select id="blood_disorder">
+                <option value="">Select</option>
+                <option value="No">No</option>
+                <option value="Yes">Yes</option>
+            </select>
+        </div>
+        
+        <div class="question">
+            <label>Immune Disorder:</label>
+            <select id="immune_disorder">
+                <option value="">Select</option>
+                <option value="No">No</option>
+                <option value="Yes">Yes</option>
+            </select>
+        </div>
+        
+        <div class="question">
+            <label>Osteoporosis:</label>
+            <select id="osteoporosis">
+                <option value="">Select</option>
+                <option value="No">No</option>
+                <option value="Yes">Yes</option>
+            </select>
+        </div>
+        
+        <button onclick="saveComorbidities()">Save Comorbidities</button>
+    </div>
+    
+    <!-- Prosthesis Section -->
+    <div class="section">
+        <h3>🦷 Prosthesis Selection</h3>
+        
+        <label>Prosthesis Type:</label>
+        <select id="prosthesis_type" onchange="updateProsthesisNames()">
+            <option value="">Select Type</option>
+            <option value="Fixed">Fixed</option>
+            <option value="Removable">Removable</option>
+        </select>
+        
+        <label>Prosthesis Name:</label>
+        <select id="prosthesis_name">
+            <option value="">Select Name</option>
+        </select>
+        
+        <input type="date" id="installation_date">
+        <input type="date" id="next_maintenance_date">
+        <input type="text" id="notes" placeholder="Notes (optional)">
+        
+        <button onclick="saveProsthesis()">Save Prosthesis & Go to Dashboard</button>
+    </div>
+    
+    <div id="result"></div>
+
+    <script>
+        // Prosthesis types
+        var fixedTypes = ["Crown", "Bridge", "Implant"];
+        var removableTypes = ["Full Denture", "Partial Denture"];
+        
+        function updateProsthesisNames() {
+            var type = document.getElementById('prosthesis_type').value;
+            var nameSelect = document.getElementById('prosthesis_name');
+            
+            nameSelect.innerHTML = '<option value="">Select Name</option>';
+            
+            if (type === "Fixed") {
+                fixedTypes.forEach(function(name) {
+                    nameSelect.innerHTML += '<option value="' + name + '">' + name + '</option>';
+                });
+            } else if (type === "Removable") {
+                removableTypes.forEach(function(name) {
+                    nameSelect.innerHTML += '<option value="' + name + '">' + name + '</option>';
+                });
+            }
+        }
+        
+        function saveComorbidities() {
+            var userId = document.getElementById('user_id').value;
+            
+            // Check if all fields are selected
+            var diabetes = document.getElementById('diabetes').value;
+            var hypertension = document.getElementById('hypertension').value;
+            var hyperthyroidism = document.getElementById('hyperthyroidism').value;
+            var hypothyroidism = document.getElementById('hypothyroidism').value;
+            var heart_disease = document.getElementById('heart_disease').value;
+            var blood_disorder = document.getElementById('blood_disorder').value;
+            var immune_disorder = document.getElementById('immune_disorder').value;
+            var osteoporosis = document.getElementById('osteoporosis').value;
+            
+            // Validate - all must be selected
+            if (!diabetes || !hypertension || !hyperthyroidism || !hypothyroidism || 
+                !heart_disease || !blood_disorder || !immune_disorder || !osteoporosis) {
+                alert("Please select Yes or No for all conditions!");
+                return;
+            }
+            
+            if (!userId) {
+                alert("Please enter User ID!");
+                return;
+            }
+            
+            var data = {
+                user_id: userId,
+                diabetes: diabetes,
+                hypertension: hypertension,
+                hyperthyroidism: hyperthyroidism,
+                hypothyroidism: hypothyroidism,
+                heart_disease: heart_disease,
+                blood_disorder: blood_disorder,
+                immune_disorder: immune_disorder,
+                osteoporosis: osteoporosis
+            };
+
+            fetch('http://localhost/prosthesis_app/save_comorbidities.php', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.text())
+            .then(result => {
+                document.getElementById('result').innerText = "Comorbidities: " + result;
+            })
+            .catch(error => {
+                document.getElementById('result').innerText = 'Error: ' + error;
+            });
+        }
+        
+        function saveProsthesis() {
+            var userId = document.getElementById('user_id').value;
+            var prostType = document.getElementById('prosthesis_type').value;
+            var prostName = document.getElementById('prosthesis_name').value;
+            var instDate = document.getElementById('installation_date').value;
+            var maintDate = document.getElementById('next_maintenance_date').value;
+            var notes = document.getElementById('notes').value;
+            
+            // Validate
+            if (!userId || !prostType || !prostName || !instDate || !maintDate) {
+                alert("Please fill in all required fields!");
+                return;
+            }
+            
+            var data = {
+                user_id: userId,
+                prosthesis_type: prostType,
+                prosthesis_name: prostName,
+                installation_date: instDate,
+                next_maintenance_date: maintDate,
+                notes: notes
+            };
+
+            fetch('http://localhost/prosthesis_app/save_prosthesis.php', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.text())
+            .then(result => {
+                document.getElementById('result').innerText = "Prosthesis: " + result;
+            })
+            .catch(error => {
+                document.getElementById('result').innerText = 'Error: ' + error;
+            });
+        }
+    </script>
+</body>
+</html>

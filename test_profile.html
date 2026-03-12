@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Test Profile</title>
+    <style>
+        body { font-family: Arial; padding: 20px; max-width: 600px; margin: 0 auto; }
+        .section { background: #f5f5f5; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
+        input { width: 100%; padding: 10px; margin: 5px 0; }
+        button { padding: 12px 24px; background: blue; color: white; border: none; border-radius: 5px; cursor: pointer; margin: 5px; }
+        .btn-success { background: green; }
+        .btn-danger { background: red; }
+        pre { background: #333; color: #0f0; padding: 15px; border-radius: 5px; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <h2>Profile Test</h2>
+    
+    <input type="number" id="user_id" placeholder="User ID" value="1">
+    
+    <div class="section">
+        <h3>Get Profile</h3>
+        <button onclick="getProfile()">Get Profile</button>
+    </div>
+    
+    <div class="section">
+        <h3>Update Profile</h3>
+        <input type="text" id="name" placeholder="Full Name">
+        <input type="email" id="email" placeholder="Email">
+        <input type="text" id="phone" placeholder="Phone">
+        <input type="number" id="age" placeholder="Age">
+        <input type="date" id="dob" placeholder="Date of Birth">
+        <input type="text" id="address" placeholder="Address">
+        <br>
+        <button class="btn-success" onclick="updateProfile()">Save Changes</button>
+    </div>
+    
+    <pre id="result">Results will appear here...</pre>
+
+    <script>
+        function showResult(data) {
+            document.getElementById('result').innerText = JSON.stringify(data, null, 2);
+        }
+        
+        function getProfile() {
+            var userId = document.getElementById('user_id').value;
+            
+            fetch('http://localhost/prosthesis_app/get_profile.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: userId })
+            })
+            .then(r => r.json())
+            .then(data => {
+                showResult(data);
+                if(data.success) {
+                    document.getElementById('name').value = data.profile.name;
+                    document.getElementById('email').value = data.profile.email;
+                    document.getElementById('phone').value = data.profile.phone;
+                    document.getElementById('age').value = data.profile.age;
+                    document.getElementById('dob').value = data.profile.date_of_birth;
+                    document.getElementById('address').value = data.profile.address;
+                }
+            });
+        }
+        
+        function updateProfile() {
+            var userId = document.getElementById('user_id').value;
+            var data = {
+                user_id: userId,
+                name: document.getElementById('name').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                age: document.getElementById('age').value,
+                date_of_birth: document.getElementById('dob').value,
+                address: document.getElementById('address').value
+            };
+            
+            fetch('http://localhost/prosthesis_app/update_profile.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(r => r.json())
+            .then(showResult);
+        }
+        
+        // Load profile on page load
+        getProfile();
+    </script>
+</body>
+</html>

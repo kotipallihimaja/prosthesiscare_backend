@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Login</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        input { padding: 10px; margin: 5px; width: 200px; display: block; }
+        button { padding: 10px 20px; background: green; color: white; margin-top: 10px; }
+        #result { margin-top: 20px; padding: 10px; background: #f0f0f0; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <h2>Test Login</h2>
+    
+    <input type="text" id="email_or_name" placeholder="Email or Name"><br>
+    <input type="password" id="password" placeholder="Password"><br>
+    
+    <button onclick="testLogin()">Login</button>
+    
+    <div id="result"></div>
+
+    <script>
+        function testLogin() {
+            var data = {
+                email_or_name: document.getElementById('email_or_name').value,
+                password: document.getElementById('password').value
+            };
+
+            fetch('http://localhost/prosthesis_app/login.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                document.getElementById('result').innerText = JSON.stringify(result, null, 2);
+            })
+            .catch(error => {
+                document.getElementById('result').innerText = 'Error: ' + error;
+            });
+        }
+    </script>
+</body>
+</html>

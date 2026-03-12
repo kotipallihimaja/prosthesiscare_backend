@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Dashboard</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        .box { background: #f0f0f0; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .error { background: #ffcccc; color: red; }
+        .success { background: #ccffcc; color: green; }
+        pre { background: #333; color: #0f0; padding: 15px; border-radius: 5px; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <h2>Debug Dashboard API</h2>
+    
+    <input type="number" id="user_id" placeholder="User ID" value="1">
+    <button onclick="testAPI()">Test API</button>
+    
+    <div id="output"></div>
+
+    <script>
+        function testAPI() {
+            var userId = document.getElementById('user_id').value;
+            var output = document.getElementById('output');
+            
+            output.innerHTML = '<div class="box">Testing API with User ID: ' + userId + '</div>';
+            
+            // Test 1: Check if user exists
+            fetch('http://localhost/prosthesis_app/login.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email_or_name: userId,
+                    password: 'test'
+                })
+            })
+            .then(response => response.text())
+            .then(text => {
+                output.innerHTML += '<div class="box">Login API Response:<br><pre>' + text + '</pre></div>';
+                
+                try {
+                    var json = JSON.parse(text);
+                    if(json.success) {
+                        output.innerHTML += '<div class="box success">User found: ' + json.user.name + '</div>';
+                    } else {
+                        output.innerHTML += '<div class="box error">User NOT found: ' + json.message + '</div>';
+                    }
+                } catch(e) {
+                    output.innerHTML += '<div class="box error">JSON Parse Error: ' + e.message + '</div>';
+                }
+            })
+            .catch(error => {
+                output.innerHTML += '<div class="box error">Fetch Error: ' + error.message + '</div>';
+            });
+            
+            // Test 2: Test dashboard API
+            fetch('http://localhost/prosthesis_app/get_dashboard.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: userId })
+            })
+            .then(response => response.text())
+            .then(text => {
+                output.innerHTML += '<div class="box">Dashboard API Response:<br><pre>' + text + '</pre></div>';
+            })
+            .catch(error => {
+                output.innerHTML += '<div class="box error">Dashboard Fetch Error: ' + error.message + '</div>';
+            });
+        }
+        
+        // Auto-run test
+        testAPI();
+    </script>
+</body>
+</html>

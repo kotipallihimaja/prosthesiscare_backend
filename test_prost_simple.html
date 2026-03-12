@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Prosthesis Test</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        input, select { padding: 10px; margin: 5px; width: 200px; display: block; }
+        button { padding: 10px 20px; background: green; color: white; margin-top: 10px; }
+        #result { margin-top: 20px; padding: 10px; background: #f0f0f0; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <h2>Simple Prosthesis Test</h2>
+    
+    <input type="number" id="user_id" placeholder="User ID" value="1"><br>
+    
+    <select id="prosthesis_type">
+        <option value="Fixed">Fixed</option>
+        <option value="Removable">Removable</option>
+    </select><br>
+    
+    <select id="prosthesis_name">
+        <option value="Crown">Crown</option>
+        <option value="Bridge">Bridge</option>
+        <option value="Implant">Implant</option>
+        <option value="Full Denture">Full Denture</option>
+        <option value="Partial Denture">Partial Denture</option>
+    </select><br>
+    
+    <input type="date" id="installation_date" value="2024-01-01"><br>
+    <input type="date" id="next_maintenance_date" value="2024-06-01"><br>
+    <input type="text" id="notes" placeholder="Notes" value="Test notes"><br>
+    
+    <button onclick="saveProsthesis()">Save Prosthesis</button>
+    
+    <div id="result"></div>
+
+    <script>
+        function saveProsthesis() {
+            var userId = document.getElementById('user_id').value;
+            var prostType = document.getElementById('prosthesis_type').value;
+            var prostName = document.getElementById('prosthesis_name').value;
+            var instDate = document.getElementById('installation_date').value;
+            var maintDate = document.getElementById('next_maintenance_date').value;
+            var notes = document.getElementById('notes').value;
+            
+            var data = {
+                user_id: userId,
+                prosthesis_type: prostType,
+                prosthesis_name: prostName,
+                installation_date: instDate,
+                next_maintenance_date: maintDate,
+                notes: notes
+            };
+
+            document.getElementById('result').innerText = "Sending: " + JSON.stringify(data);
+
+            fetch('http://localhost/prosthesis_app/save_prosthesis.php', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.text())
+            .then(result => {
+                document.getElementById('result').innerText = "Response: " + result;
+            })
+            .catch(error => {
+                document.getElementById('result').innerText = 'Error: ' + error;
+            });
+        }
+    </script>
+</body>
+</html>

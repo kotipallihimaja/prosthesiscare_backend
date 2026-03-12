@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Appointments</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 500px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; }
+        h2 { color: #333; }
+        .section { margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 8px; }
+        label { display: block; margin-top: 10px; font-weight: bold; }
+        input, select, textarea { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 5px; }
+        button { width: 100%; padding: 12px; margin-top: 15px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
+        button:hover { background: #0056b3; }
+        .btn-secondary { background: #6c757d; }
+        .btn-danger { background: #dc3545; }
+        .btn-success { background: #28a745; }
+        #result { margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 5px; white-space: pre-wrap; font-family: monospace; }
+        .appointment-card { background: #e9ecef; padding: 15px; margin: 10px 0; border-radius: 8px; border-left: 4px solid #007bff; }
+        .notification-card { background: #fff3cd; padding: 10px; margin: 5px 0; border-radius: 5px; }
+        .badge { display: inline-block; padding: 3px 8px; border-radius: 10px; font-size: 12px; color: white; }
+        .badge-blue { background: #007bff; }
+        .badge-green { background: #28a745; }
+        .badge-red { background: #dc3545; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>📅 Appointments Test</h2>
+        
+        <input type="number" id="user_id" placeholder="User ID" value="1">
+        
+        <!-- Schedule Appointment -->
+        <div class="section">
+            <h3>📆 Schedule New Appointment</h3>
+            
+            <label>Doctor:</label>
+            <select id="doctor_name">
+                <option value="">Select Doctor</option>
+                <option value="Dr. Smith">Dr. Smith (Prosthodontist)</option>
+                <option value="Dr. Johnson">Dr. Johnson (Oral Surgeon)</option>
+                <option value="Dr. Williams">Dr. Williams (Periodontist)</option>
+                <option value="Dr. Brown">Dr. Brown (General Dentist)</option>
+                <option value="Dr. Davis">Dr. Davis (Orthodontist)</option>
+            </select>
+            
+            <label>Appointment Type:</label>
+            <select id="appointment_type">
+                <option value="">Select Type</option>
+                <option value="Check-up">Regular Check-up</option>
+                <option value="Cleaning">Professional Cleaning</option>
+                <option value="Follow-up">Follow-up Visit</option>
+                <option value="Adjustment">Prosthesis Adjustment</option>
+                <option value="Emergency">Emergency</option>
+            </select>
+            
+            <label>Date:</label>
+            <input type="date" id="appointment_date">
+            
+            <label>Time:</label>
+            <input type="time" id="appointment_time">
+            
+            <label>Notes (optional):</label>
+            <textarea id="notes" placeholder="Any special instructions..."></textarea>
+            
+            <button onclick="scheduleAppointment()">Schedule Appointment</button>
+        </div>
+        
+        <!-- Get Appointments -->
+        <div class="section">
+            <h3>📋 View Appointments</h3>
+            
+            <label>Filter by Month:</label>
+            <input type="month" id="filter_month" value="2024-12">
+            
+            <button class="btn-secondary" onclick="getAppointments()">Get Appointments</button>
+        </div>
+        
+        <!-- Get Notifications -->
+        <div class="section">
+            <h3>🔔 Notifications</h3>
+            <button class="btn-secondary" onclick="getNotifications()">Get Notifications</button>
+        </div>
+        
+        <!-- Results -->
+        <div id="result">Results will appear here...</div>
+    </div>
+
+    <script>
+        // Set default date to tomorrow
+        document.getElementById('appointment_date').valueAsDate = new Date(Date.now() + 86400000);
+        
+        function showResult(data) {
+            document.getElementById('result').innerText = JSON.stringify(data, null, 2);
+        }
+        
+        function showError(error) {
+            document.getElementById('result').innerText = 'Error: ' + error;
+        }
+        
+        function scheduleAppointment() {
+            var userId = document.getElementById('user_id').value;
+            var doctor = document.getElementById('doctor_name').value;
+            var type = document.getElementById('appointment_type').value;
+            var date = document.getElementById('appointment_date').value;
+            var time = document.getElementById('appointment_time').value;
+            var notes = document.getElementById('notes').value;
+            
+            if(!userId || !doctor || !type || !date || !time) {
+                alert('Please fill in all required fields!');
+                return;
+            }
+            
+            var data = {
+                user_id: userId,
+                doctor_name: doctor,
+                appointment_type: type,
+                appointment_date: date,
+                appointment_time: time,
+                notes: notes
+            };
+            
+            fetch('http://localhost/prosthesis_app/schedule_appointment.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                showResult(data);
+                if(data.success) {
+                    // Refresh appointments
+                    getAppointments();
+                }
+            })
+            .catch(error => showError(error));
+        }
+        
+        function getAppointments() {
+            var userId = document.getElementById('user_id').value;
+            var filterMonth = document.getElementById('filter_month').value;
+            
+            var parts = filterMonth.split('-');
+            var month = parts[1];
+            var year = parts[0];
+            
+            var data = {
+                user_id: userId,
+                month: month,
+                year: year
+            };
+            
+            fetch('http://localhost/prosthesis_app/get_appointments.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                var html = '=== UPCOMING APPOINTMENTS ===\n\n';
+                
+                if(result.upcoming_appointments && result.upcoming_appointments.length > 0) {
+                    result.upcoming_appointments.forEach(function(apt) {
+                        html += '📅 ' + apt.appointment_date + ' at ' + apt.appointment_time + '\n';
+                        html += '👨‍⚕️ ' + apt.doctor_name + '\n';
+                        html += '📋 ' + apt.appointment_type + '\n';
+                        html += 'Status: ' + apt.status + '\n';
+                        html += '[Cancel Appointment]\n\n';
+                    });
+                } else {
+                    html += 'No upcoming appointments\n';
+                }
+                
+                html += '\n=== PAST APPOINTMENTS ===\n\n';
+                if(result.past_appointments && result.past_appointments.length > 0) {
+                    result.past_appointments.forEach(function(apt) {
+                        html += '📅 ' + apt.appointment_date + ' - ' + apt.doctor_name + ' (' + apt.status + ')\n';
+                    });
+                } else {
+                    html += 'No past appointments\n';
+                }
+                
+                document.getElementById('result').innerText = html;
+            })
+            .catch(error => showError(error));
+        }
+        
+        function getNotifications() {
+            var userId = document.getElementById('user_id').value;
+            
+            var data = { user_id: userId };
+            
+            fetch('http://localhost/prosthesis_app/get_notifications.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                var html = '🔔 Unread: ' + result.unread_count + '\n\n';
+                html += '=== NOTIFICATIONS ===\n\n';
+                
+                if(result.notifications && result.notifications.length > 0) {
+                    result.notifications.forEach(function(notif) {
+                        var readStatus = notif.is_read ? '✓' : '○';
+                        html += readStatus + ' ' + notif.title + '\n';
+                        html += notif.message + '\n';
+                        html += '📅 ' + notif.created_at + '\n\n';
+                    });
+                } else {
+                    html += 'No notifications\n';
+                }
+                
+                html += '\n=== UPCOMING REMINDERS ===\n\n';
+                if(result.upcoming_reminders && result.upcoming_reminders.length > 0) {
+                    result.upcoming_reminders.forEach(function(rem) {
+                        html += '⏰ ' + rem.appointment_date + ' at ' + rem.appointment_time + '\n';
+                        html += '👨‍⚕️ ' + rem.doctor_name + '\n';
+                        html += '📋 ' + rem.appointment_type + '\n\n';
+                    });
+                } else {
+                    html += 'No upcoming reminders\n';
+                }
+                
+                document.getElementById('result').innerText = html;
+            })
+            .catch(error => showError(error));
+        }
+    </script>
+</body>
+</html>

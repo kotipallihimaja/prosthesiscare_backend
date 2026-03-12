@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Dashboard</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f5f5f5; min-height: 100vh; }
+        
+        .header-section {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            padding: 30px 20px;
+            color: white;
+            border-bottom-left-radius: 30px;
+            border-bottom-right-radius: 30px;
+            margin-bottom: 20px;
+        }
+        .welcome { font-size: 18px; opacity: 0.9; margin-bottom: 5px; }
+        .user-name { font-size: 28px; font-weight: bold; margin-bottom: 20px; }
+        
+        .compliance-card {
+            background: rgba(255,255,255,0.2);
+            border-radius: 15px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .compliance-info h3 { font-size: 14px; opacity: 0.9; margin-bottom: 5px; }
+        .compliance-score { font-size: 48px; font-weight: bold; }
+        .compliance-score span { font-size: 20px; }
+        .points-badge {
+            background: rgba(255,255,255,0.3);
+            padding: 10px 20px;
+            border-radius: 20px;
+            text-align: center;
+        }
+        .points-badge .points { font-size: 24px; font-weight: bold; }
+        .points-badge .label { font-size: 12px; opacity: 0.8; }
+        
+        .container { padding: 20px; max-width: 500px; margin: 0 auto; }
+        .section-title { font-size: 18px; font-weight: bold; color: #333; margin-bottom: 15px; }
+        
+        .reminder-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .reminder-card:hover { transform: translateY(-2px); }
+        .reminder-header { display: flex; justify-content: space-between; align-items: center; }
+        .reminder-title { font-size: 18px; font-weight: bold; color: #333; }
+        .reminder-time { font-size: 14px; color: #666; }
+        .reminder-status {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        .status-pending { background: #fff3cd; color: #856404; }
+        .status-completed { background: #d4edda; color: #155724; }
+        .status-snoozed { background: #e2e3e5; color: #383d41; }
+        
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        .modal.show { display: flex; align-items: center; justify-content: center; }
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 450px;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 25px;
+        }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .modal-title { font-size: 22px; font-weight: bold; color: #333; }
+        .close-btn { background: none; border: none; font-size: 24px; cursor: pointer; color: #999; }
+        
+        .task-counter {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+        .counter-number { font-size: 48px; font-weight: bold; }
+        .counter-label { font-size: 14px; opacity: 0.9; }
+        
+        .task-list { list-style: none; }
+        .task-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .task-item:hover { border-color: #667eea; }
+        .task-item.completed { background: #d4edda; border-color: #28a745; }
+        .task-checkbox {
+            width: 28px;
+            height: 28px;
+            border: 2px solid #ccc;
+            border-radius: 50%;
+            margin-right: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .task-item.completed .task-checkbox { background: #28a745; border-color: #28a745; color: white; }
+        .task-text { font-size: 16px; color: #333; }
+        
+        .action-buttons { margin-top: 20px; }
+        .btn { width: 100%; padding: 15px; border: none; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; margin-bottom: 10px; }
+        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .btn-secondary { background: #e9ecef; color: #333; }
+        .btn-success { background: #28a745; color: white; }
+        
+        /* Snooze Options */
+        .snooze-info {
+            background: #e7f3ff;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .snooze-info h4 { color: #0066cc; margin-bottom: 5px; }
+        .snooze-info p { color: #666; font-size: 14px; }
+        
+        .snooze-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .snooze-btn {
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            background: white;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            transition: all 0.2s;
+        }
+        .snooze-btn:hover { border-color: #667eea; background: #f0f4ff; }
+        .snooze-btn.selected { border-color: #667eea; background: #667eea; color: white; }
+        
+        .snooze-action-btns { display: flex; gap: 10px; }
+        
+        /* Success Modal */
+        .success-content { text-align: center; padding: 20px; }
+        .success-icon { font-size: 60px; margin-bottom: 15px; }
+        .success-title { font-size: 24px; font-weight: bold; color: #28a745; margin-bottom: 10px; }
+        .success-points { font-size: 36px; font-weight: bold; color: #667eea; margin: 20px 0; }
+        .success-tip { background: #fff3cd; padding: 15px; border-radius: 10px; font-size: 14px; color: #856404; margin: 20px 0; }
+        
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        }
+        .nav-item { text-align: center; color: #999; font-size: 12px; cursor: pointer; }
+        .nav-item.active { color: #667eea; }
+        .nav-icon { font-size: 24px; margin-bottom: 3px; }
+        .spacer { height: 80px; }
+        
+        /* Snooze confirmation */
+        .snooze-confirm {
+            text-align: center;
+            padding: 30px;
+        }
+        .snooze-timer {
+            font-size: 48px;
+            font-weight: bold;
+            color: #667eea;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header Section -->
+    <div class="header-section">
+        <div class="welcome">Welcome back,</div>
+        <div class="user-name" id="userName">Loading...</div>
+        
+        <div class="compliance-card">
+            <div class="compliance-info">
+                <h3>COMPLIANCE SCORE</h3>
+                <div class="compliance-score"><span id="complianceScore">0</span>%</div>
+            </div>
+            <div class="points-badge">
+                <div class="points" id="totalPoints">0</div>
+                <div class="label">Total Points</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="container">
+        <h3 class="section-title">TODAY'S REMINDERS</h3>
+        <div id="remindersList">
+            <p style="text-align:center;color:#999;">Loading...</p>
+        </div>
+    </div>
+    
+    <div class="spacer"></div>
+    
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav">
+        <div class="nav-item active"><div class="nav-icon">&#127968;</div><div>Home</div></div>
+        <div class="nav-item"><div class="nav-icon">&#128197;</div><div>Appointments</div></div>
+        <div class="nav-item"><div class="nav-icon">&#128218;</div><div>Education</div></div>
+        <div class="nav-item"><div class="nav-icon">&#128276;</div><div>Reminders</div></div>
+        <div class="nav-item"><div class="nav-icon">&#128100;</div><div>Profile</div></div>
+    </div>
+    
+    <!-- Task Modal -->
+    <div class="modal" id="taskModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title" id="modalTitle">Morning Routine</div>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            
+            <div class="task-counter">
+                <div class="counter-number"><span id="completedCount">0</span>/<span id="totalCount">4</span></div>
+                <div class="counter-label">Tasks Completed</div>
+            </div>
+            
+            <p style="text-align:center;color:#666;margin-bottom:20px;">
+                Complete all tasks to maintain your prosthesis properly
+            </p>
+            
+            <ul class="task-list" id="taskList"></ul>
+            
+            <div class="action-buttons">
+                <button class="btn btn-primary" id="completeBtn" onclick="completeReminder()">MARK AS COMPLETE</button>
+                <button class="btn btn-secondary" onclick="showSnoozeModal()">SNOOZE FOR 30 MINUTES</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Snooze Modal -->
+    <div class="modal" id="snoozeModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Snooze Reminder</div>
+                <button class="close-btn" onclick="closeSnoozeModal()">&times;</button>
+            </div>
+            
+            <div class="snooze-info">
+                <h4 id="snoozeReminderTitle">Daily Cleaning Reminder</h4>
+                <p>Time for your morning cleaning routine</p>
+            </div>
+            
+            <p style="margin-bottom:15px;font-weight:600;">How long would you like to snooze this reminder?</p>
+            
+            <div class="snooze-options">
+                <button class="snooze-btn" onclick="selectSnoozeTime('15', this)">15 minutes</button>
+                <button class="snooze-btn" onclick="selectSnoozeTime('30', this)">30 minutes</button>
+                <button class="snooze-btn" onclick="selectSnoozeTime('60', this)">1 hour</button>
+                <button class="snooze-btn" onclick="selectSnoozeTime('120', this)">2 hours</button>
+            </div>
+            
+            <button class="snooze-btn" style="width:100%;text-align:center;" onclick="selectSnoozeTime('later', this)">Later today</button>
+            
+            <div class="snooze-action-btns" style="margin-top:20px;">
+                <button class="btn btn-success" onclick="confirmSnooze()">Snooze</button>
+                <button class="btn btn-secondary" onclick="closeSnoozeModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Snooze Confirm Modal -->
+    <div class="modal" id="snoozeConfirmModal">
+        <div class="modal-content">
+            <div class="snooze-confirm">
+                <div style="font-size:48px;">&#9203;</div>
+                <h3>Snoozed!</h3>
+                <p>Reminder snoozed for</p>
+                <div class="snooze-timer" id="snoozeTimeDisplay">30 minutes</div>
+                <p>
