@@ -1,55 +1,34 @@
 <?php
 header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json");
-header("Access-Control-Allow-Methods: POST");
+include 'db_connection.php';
 
-include_once 'db_connection.php';
+$user_id = isset($_GET['user_id']) ? (int)$_GET['user_id'] : 0;
 
-$data = json_decode(file_get_contents("php://input"));
+$query = "
+SELECT 
+    t.id,
+    t.task_name,
+    IFNULL(ut.is_completed, 0) as is_completed
+FROM daily_tasks t
+LEFT JOIN user_tasks ut 
+    ON t.id = ut.task_id 
+    AND ut.user_id = $user_id
+    AND ut.date = CURDATE()
+ORDER BY t.id ASC
+";
 
-if(!empty($data->user_id) && !empty($data->reminder_id)){
+$result = $conn->query($query);
+$tasks = [];
 
-    $user_id = $data->user_id;
-    $reminder_id = $data->reminder_id;
-    $today = date('Y-m-d');
-
-    try {
-        // Get reminder info
-        $reminder_query = "SELECT * FROM reminders WHERE id = ? AND user_id = ?";
-        $reminder_stmt = $connection->prepare($reminder_query);
-        $reminder_stmt->execute([$reminder_id, $user_id]);
-        $reminder = $reminder_stmt->fetch(PDO::FETCH_ASSOC);
-
-        // Get tasks
-        $task_query = "SELECT dt.*, 
-                      (SELECT is_completed FROM task_completions 
-                       WHERE task_id = dt.id AND user_id = ? AND completion_date = ?) as is_completed
-                      FROM daily_tasks dt
-                      WHERE dt.reminder_id = ?";
-        $task_stmt = $connection->prepare($task_query);
-        $task_stmt->execute([$user_id, $today, $reminder_id]);
-        $tasks = $task_stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        $completed_count = 0;
-        foreach($tasks as $task){
-            if($task['is_completed'] == 1){
-                $completed_count++;
-            }
-        }
-
-        echo json_encode(array(
-            "success" => true,
-            "reminder" => $reminder,
-            "tasks" => $tasks,
-            "completed_count" => $completed_count,
-            "total_count" => count($tasks)
-        ));
-
-    } catch(PDOException $e){
-        echo json_encode(array("success" => false, "message" => "Error: " . $e->getMessage()));
+if($result) {
+    while ($row = $result->fetch_assoc()) {
+        $row['id'] = (int)$row['id'];
+        $row['is_completed'] = (int)$row['is_completed'];
+        $tasks[] = $row;
     }
-
+    echo json_encode(["success" => true, "tasks" => $tasks]);
 } else {
-    echo json_encode(array("success" => false, "message" => "Missing required fields!"));
+    echo json_encode(["success" => false, "message" => "Query failed"]);
 }
 ?>

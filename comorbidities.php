@@ -1,80 +1,64 @@
 <?php
 header("Access-Control-Allow-Origin: *");
-header("Content-Type: application/json");
+header("Content-Type: application/json; charset=UTF-8");
 header("Access-Control-Allow-Methods: POST");
 
+// మీ db_connection.php ని ఇక్కడ ఇంక్లూడ్ చేస్తున్నాము
 include_once 'db_connection.php';
 
+// JSON డేటాని చదవడం
 $data = json_decode(file_get_contents("php://input"));
 
-if(
-    !empty($data->user_id) &&
-    !empty($data->diabetes) &&
-    !empty($data->hypertension) &&
-    !empty($data->hyperthyroidism) &&
-    !empty($data->hypothyroidism) &&
-    !empty($data->heart_disease) &&
-    !empty($data->blood_disorder) &&
-    !empty($data->immune_disorder) &&
-    !empty($data->osteoporosis)
-){
+if(!$data){
+    $data = (object) $_POST;
+}
 
-    $user_id = $data->user_id;
-    $diabetes = $data->diabetes;
-    $hypertension = $data->hypertension;
-    $hyperthyroidism = $data->hyperthyroidism;
-    $hypothyroidism = $data->hypothyroidism;
-    $heart_disease = $data->heart_disease;
-    $blood_disorder = $data->blood_disorder;
-    $immune_disorder = $data->immune_disorder;
-    $osteoporosis = $data->osteoporosis;
-    $other = !empty($data->other) ? $data->other : '';
+// యూజర్ ఐడి చెక్
+$user_id = $data->user_id ?? null;
 
-    try {
-        // Check if user already has comorbidities saved
-        $check = $connection->prepare("SELECT id FROM comorbidities WHERE user_id = ?");
-        $check->execute([$user_id]);
+if(!$user_id){
+    echo json_encode(["success" => false, "message" => "User ID missing"]);
+    exit();
+}
 
-        if($check->rowCount() > 0) {
-            // Update existing record
-            $query = "UPDATE comorbidities SET 
-                      diabetes = ?, hypertension = ?, hyperthyroidism = ?,
-                      hypothyroidism = ?, heart_disease = ?, blood_disorder = ?,
-                      immune_disorder = ?, osteoporosis = ?, other = ?
-                      WHERE user_id = ?";
-            $stmt = $connection->prepare($query);
-            $stmt->execute([$diabetes, $hypertension, $hyperthyroidism,
-                          $hypothyroidism, $heart_disease, $blood_disorder,
-                          $immune_disorder, $osteoporosis, $other, $user_id]);
-        } else {
-            // Insert new record
-            $query = "INSERT INTO comorbidities 
-                      (user_id, diabetes, hypertension, hyperthyroidism, 
-                       hypothyroidism, heart_disease, blood_disorder, 
-                       immune_disorder, osteoporosis, other) 
-                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-            $stmt = $connection->prepare($query);
-            $stmt->execute([$user_id, $diabetes, $hypertension, $hyperthyroidism,
-                          $hypothyroidism, $heart_disease, $blood_disorder,
-                          $immune_disorder, $osteoporosis, $other]);
-        }
+// డేటాని వేరియబుల్స్ లోకి తీసుకోవడం
+$diabetes = $data->diabetes ?? "No";
+$hypertension = $data->hypertension ?? "No";
+$hyperthyroidism = $data->hyperthyroidism ?? "No";
+$hypothyroidism = $data->hypothyroidism ?? "No";
+$heart_disease = $data->heart_disease ?? "No";
+$blood_disorder = $data->blood_disorder ?? "No";
+$immune_disorder = $data->immune_disorder ?? "No";
+$osteoporosis = $data->osteoporosis ?? "No";
+$other = $data->other ?? "";
 
-        echo json_encode(array(
-            "success" => true,
-            "message" => "Comorbidities saved successfully!"
-        ));
-
-    } catch(PDOException $e){
-        echo json_encode(array(
-            "success" => false,
-            "message" => "Error: " . $e->getMessage()
-        ));
+try {
+    
+    $check = $conn->prepare("SELECT id FROM comorbidities WHERE user_id = ?");
+    $check->bind_param("i", $user_id);
+    $check->execute();
+    $check->store_result();
+    
+    if($check->num_rows > 0) {
+        
+        $stmt = $conn->prepare("UPDATE comorbidities SET diabetes=?, hypertension=?, hyperthyroidism=?, hypothyroidism=?, heart_disease=?, blood_disorder=?, immune_disorder=?, osteoporosis=?, other=? WHERE user_id=?");
+        $stmt->bind_param("sssssssssi", $diabetes, $hypertension, $hyperthyroidism, $hypothyroidism, $heart_disease, $blood_disorder, $immune_disorder, $osteoporosis, $other, $user_id);
+    } else {
+        
+        $stmt = $conn->prepare("INSERT INTO comorbidities (user_id, diabetes, hypertension, hyperthyroidism, hypothyroidism, heart_disease, blood_disorder, immune_disorder, osteoporosis, other) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("isssssssss", $user_id, $diabetes, $hypertension, $hyperthyroidism, $hypothyroidism, $heart_disease, $blood_disorder, $immune_disorder, $osteoporosis, $other);
     }
 
-} else {
-    echo json_encode(array(
-        "success" => false,
-        "message" => "Please fill in all required fields!"
-    ));
+    if($stmt->execute()) {
+        echo json_encode(["success" => true, "message" => "Comorbidities saved successfully"]);
+    } else {
+        echo json_encode(["success" => false, "message" => "Database error: " . $conn->error]);
+    }
+    
+    $stmt->close();
+    $check->close();
+
+} catch (Exception $e) {
+    echo json_encode(["success" => false, "message" => "Server Error: " . $e->getMessage()]);
 }
 ?>
