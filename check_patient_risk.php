@@ -48,6 +48,7 @@ if(!empty($data->user_id)){
                 "risk_level" => $has_risk ? "High Risk" : "Normal",
                 "risk_color" => $has_risk ? "red" : "green",
                 "risk_conditions" => $risk_conditions,
+                "comorbidities" => $comorbidities,
                 "message" => $has_risk ? 
                     "Patient has " . count($risk_conditions) . " condition(s) that may affect dental treatment" : 
                     "No comorbidities reported"

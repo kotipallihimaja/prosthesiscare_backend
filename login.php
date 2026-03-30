@@ -1,14 +1,13 @@
 <?php
-// 1. Prevent any PHP warnings/errors from breaking the JSON output
+// 1. Include your database connection FIRST (This handles CORS and defines $conn)
+include_once 'db_connection.php';
+
+// 2. Prevent any PHP warnings/errors from breaking the JSON output
 error_reporting(0);
 ini_set('display_errors', 0);
 
-header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json; charset=UTF-8");
-header("Access-Control-Allow-Methods: POST");
 
-// 2. Include your database connection (This defines $conn)
-include_once 'db_connection.php';
 
 // 3. Read the JSON data sent from Android
 $data = json_decode(file_get_contents("php://input"));
